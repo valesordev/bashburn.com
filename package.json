@@ -1,5 +1,5 @@
 {
-  "name": "your-site-name",
+  "name": "bashburn.com",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,6 +11,8 @@
     "astro": "^5.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "tailwindcss": "^4.0.0",
-    "@valesordev/ui": "^0.1.0"
+    "@valesordev/ui": "^0.1.0",
+    "@grafana/faro-web-sdk": "^1.18.1",
+    "@grafana/faro-web-tracing": "^1.18.1"
   }
 }

@@ -1,0 +1,86 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteHeader from '@valesordev/ui/SiteHeader.astro';
+import SiteFooter from '@valesordev/ui/SiteFooter.astro';
+import { getCollection } from 'astro:content';
+
+const year = new Date().getFullYear();
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// Group by year
+const byYear: Record<string, typeof posts> = {};
+for (const post of posts) {
+  const y = post.data.date.getFullYear().toString();
+  if (!byYear[y]) byYear[y] = [];
+  byYear[y].push(post);
+}
+const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
+---
+
+<Layout title="Blog — bashburn" description="Writing on observability, infrastructure, and developer tooling.">
+  <SiteHeader id="site-header">
+    <div slot="logo">
+      <a href="/" class="text-xl font-bold text-accent font-mono">~/bashburn</a>
+    </div>
+    <ul slot="nav" class="flex space-x-6 font-mono text-sm">
+      <li><a href="/blog" class="text-white transition-colors">blog</a></li>
+      <li><a href="/talks" class="text-muted hover:text-white transition-colors">talks</a></li>
+    </ul>
+  </SiteHeader>
+
+  <main class="pt-32 pb-20 px-4 max-w-3xl mx-auto">
+    <p class="text-accent font-mono text-sm mb-3">$ ls blog/</p>
+    <h1 class="text-3xl font-bold text-white mb-12">All Posts</h1>
+
+    {posts.length === 0 ? (
+      <p class="text-muted">No posts yet. Coming soon.</p>
+    ) : (
+      years.map((year) => (
+        <section class="mb-12">
+          <h2 class="text-muted font-mono text-sm mb-6 border-b border-border pb-2">{year}</h2>
+          <ul class="space-y-5">
+            {byYear[year].map((post) => (
+              <li>
+                <a href={`/blog/${post.slug}`} class="group block">
+                  <div class="flex items-baseline justify-between gap-4">
+                    <span class="text-white group-hover:text-accent transition-colors font-medium">
+                      {post.data.title}
+                    </span>
+                    <time class="text-muted text-sm shrink-0 font-mono">
+                      {post.data.date.toISOString().slice(0, 10)}
+                    </time>
+                  </div>
+                  <p class="text-muted text-sm mt-1">{post.data.description}</p>
+                  {post.data.tags.length > 0 && (
+                    <div class="flex gap-2 mt-2">
+                      {post.data.tags.map((tag) => (
+                        <span class="text-xs font-mono text-muted bg-surface border border-border px-2 py-0.5 rounded">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    )}
+  </main>
+
+  <SiteFooter>
+    <div class="text-center font-mono text-sm">
+      <p class="text-muted">&copy; {year} Brian · bashburn.com</p>
+    </div>
+  </SiteFooter>
+</Layout>
+
+<style>
+  .text-accent { color: var(--color-accent); }
+  .text-muted { color: var(--color-muted); }
+  .border-border { border-color: var(--color-border); }
+  .bg-surface { background: var(--color-surface); }
+</style>

@@ -1,0 +1,129 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '@valesordev/ui/SiteHeader.astro';
+import SiteFooter from '@valesordev/ui/SiteFooter.astro';
+import { getCollection } from 'astro:content';
+
+const year = new Date().getFullYear();
+
+const talks = await getCollection('talks');
+
+const statusOrder = ['accepted', 'submitted', 'in-progress', 'idea', 'delivered'];
+const sorted = talks.sort((a, b) => {
+  const ai = statusOrder.indexOf(a.data.status);
+  const bi = statusOrder.indexOf(b.data.status);
+  return ai - bi;
+});
+
+const active = sorted.filter((t) => t.data.status !== 'delivered');
+const delivered = sorted.filter((t) => t.data.status === 'delivered');
+
+const statusLabel: Record<string, { label: string; classes: string }> = {
+  idea:        { label: 'idea',        classes: 'bg-surface text-muted border-border' },
+  'in-progress': { label: 'in progress', classes: 'bg-surface text-yellow-400 border-yellow-800' },
+  submitted:   { label: 'submitted',   classes: 'bg-surface text-blue-400 border-blue-800' },
+  accepted:    { label: 'accepted ✓',  classes: 'bg-surface text-green-400 border-green-800' },
+  delivered:   { label: 'delivered',   classes: 'bg-surface text-muted border-border' },
+};
+---
+
+<Layout title="Talks — bashburn" description="Conference talks in progress and delivered.">
+  <SiteHeader id="site-header">
+    <div slot="logo">
+      <a href="/" class="text-xl font-bold text-accent font-mono">~/bashburn</a>
+    </div>
+    <ul slot="nav" class="flex space-x-6 font-mono text-sm">
+      <li><a href="/blog" class="text-muted hover:text-white transition-colors">blog</a></li>
+      <li><a href="/talks" class="text-white transition-colors">talks</a></li>
+    </ul>
+  </SiteHeader>
+
+  <main class="pt-32 pb-20 px-4 max-w-3xl mx-auto">
+    <p class="text-accent font-mono text-sm mb-3">$ ls talks/</p>
+    <h1 class="text-3xl font-bold text-white mb-4">Talks</h1>
+    <p class="text-muted mb-12">
+      Conference talks I'm developing, submitting, and delivering. This page tracks ideas through the full lifecycle.
+    </p>
+
+    <!-- In progress / upcoming -->
+    {active.length > 0 && (
+      <section class="mb-16">
+        <h2 class="text-muted font-mono text-sm mb-6 border-b border-border pb-2">in progress</h2>
+        <ul class="space-y-6">
+          {active.map(async (talk) => {
+            const { Content } = await talk.render();
+            const s = statusLabel[talk.data.status];
+            return (
+              <li class="border border-border rounded-md p-6">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                  <h3 class="text-white font-semibold text-lg">{talk.data.title}</h3>
+                  <span class={`text-xs font-mono px-2 py-0.5 rounded border shrink-0 ${s.classes}`}>
+                    {s.label}
+                  </span>
+                </div>
+                {talk.data.event && (
+                  <p class="text-muted font-mono text-xs mb-3">
+                    {talk.data.event}
+                    {talk.data.date ? ` · ${talk.data.date.toISOString().slice(0, 10)}` : ''}
+                  </p>
+                )}
+                <p class="text-muted text-sm leading-relaxed mb-4">{talk.data.abstract}</p>
+                {talk.data.tags.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {talk.data.tags.map((tag) => (
+                      <span class="text-xs font-mono text-muted bg-surface border border-border px-2 py-0.5 rounded">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <!-- Delivered -->
+    {delivered.length > 0 && (
+      <section>
+        <h2 class="text-muted font-mono text-sm mb-6 border-b border-border pb-2">delivered</h2>
+        <ul class="space-y-4">
+          {delivered.map((talk) => (
+            <li class="flex items-start justify-between gap-4">
+              <div>
+                <span class="text-white font-medium">{talk.data.title}</span>
+                {talk.data.event && (
+                  <p class="text-muted text-sm font-mono mt-0.5">
+                    {talk.data.event}
+                    {talk.data.date ? ` · ${talk.data.date.toISOString().slice(0, 10)}` : ''}
+                  </p>
+                )}
+              </div>
+              <span class={`text-xs font-mono px-2 py-0.5 rounded border shrink-0 ${statusLabel.delivered.classes}`}>
+                delivered
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {talks.length === 0 && (
+      <p class="text-muted">No talks yet. Working on it.</p>
+    )}
+  </main>
+
+  <SiteFooter>
+    <div class="text-center font-mono text-sm">
+      <p class="text-muted">&copy; {year} Brian · bashburn.com</p>
+    </div>
+  </SiteFooter>
+</Layout>
+
+<style>
+  .text-accent { color: var(--color-accent); }
+  .text-muted { color: var(--color-muted); }
+  .border-border { border-color: var(--color-border); }
+  .bg-surface { background: var(--color-surface); }
+</style>
